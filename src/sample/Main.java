@@ -33,7 +33,7 @@ public class Main extends Application {
         launch(args);
     }{
 
-        File img = new File("/home/ziga/Desktop/old.png");
+        File img = new File("/Users/ziga/Desktop/old.png");
         try {
             BufferedImage bimg = ImageIO.read(img);
             int w = bimg.getWidth(); //Set to the original width of the image
@@ -51,16 +51,24 @@ public class Main extends Application {
             filter.filter(bimg, bimg2);
 
 
-            double[] a = {100.0, 279.0};
-            double[] b = {948.0, 747.0};
+            double[] a = {0.0, 197.0};
+            double[] b = {848.0, 647.0};
+
+            double[] a2 = {848.0, 647.0};
+            double[] b2 = {1363.0, 350.0};
+
+            /*double[] a = {0.0, 190.0};
+            double[] b = {848.0, 640.0};*/
 
             /*int[] a = {1, 1};
             int[] b = {100, 100};*/
             ArrayList<int[]> neki = diagonala(bimg2, a, b);
+            ArrayList<int[]> neki2 = diagonala(bimg2, a2, b2);
 
-            bimg2 = down(bimg2, neki, 10);
+            bimg2 = down(bimg2, neki, 13);
+            bimg2 = down(bimg2, neki2, 13);
 
-            File outputfile = new File("/home/ziga/Desktop/new.png");
+            File outputfile = new File("/Users/ziga/Desktop/new.png");
             ImageIO.write(bimg2, "png", outputfile);
 
 
@@ -81,6 +89,7 @@ public class Main extends Application {
             int x = pixels.get(i)[0];
             int y = pixels.get(i)[1];
             Color old = new Color(img.getRGB(x, y));
+            old = old.darker();
 
             for (int j = 0; j <= deepth; j++){
                 img.setRGB(x, y+j, old.getRGB());
