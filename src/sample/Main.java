@@ -14,6 +14,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
+import java.util.ArrayList;
+
 import com.jhlabs.image.PerspectiveFilter;
 
 public class Main extends Application {
@@ -31,7 +33,7 @@ public class Main extends Application {
         launch(args);
     }{
 
-        File img = new File("/Users/ziga/Desktop/old.png");
+        File img = new File("/home/ziga/Desktop/old.png");
         try {
             BufferedImage bimg = ImageIO.read(img);
             int w = bimg.getWidth(); //Set to the original width of the image
@@ -48,23 +50,22 @@ public class Main extends Application {
             filter.setCorners(948, 747, 100, 297, 610, 100, 1463, 450);
             filter.filter(bimg, bimg2);
 
-            File outputfile = new File("/Users/ziga/Desktop/new.png");
+
+            double[] a = {100.0, 279.0};
+            double[] b = {948.0, 747.0};
+
+            /*int[] a = {1, 1};
+            int[] b = {100, 100};*/
+            ArrayList<int[]> neki = diagonala(bimg2, a, b);
+
+            bimg2 = down(bimg2, neki, 10);
+
+            File outputfile = new File("/home/ziga/Desktop/new.png");
             ImageIO.write(bimg2, "png", outputfile);
 
-            /*
-            bimg = rotateCw(bimg);
-            File test = new File("/Users/ziga/Desktop/new.png");
-            ImageIO.write(bimg, "png", test);*/
 
             Platform.exit();
 
-            /*Point tl = new Point(10, 10); //The new top left corner
-            Point tr = new Point(w - 10, h + 10); //The new top right corner
-            Point bl = new Point(10, h - 10); //The new bottom left corner
-            Point br = new Point(w - 10, h - 50); //The new bottom right corner
-            params.add(new WarpPerspective(PerspectiveTransform.getQuadToQuad(0, 0, 0, h, w, h, w, 0, tl.x, tl.y, bl.x, bl.y, br.x, br.y, tr.x, tr.y).createInverse()));
-            params.add(Interpolation.getInstance(Interpolation.INTERP_BICUBIC)); //Change the interpolation if you need more speed
-            RenderedOp dest = JAI.create("warp", params); //dest is now the output*/
 
         }catch (Exception e){
 
@@ -72,6 +73,22 @@ public class Main extends Application {
         }
 
 
+    }
+
+    public static BufferedImage down(BufferedImage img, ArrayList<int[]> pixels, int deepth){
+
+        for(int i = 0; i < pixels.size(); i++){
+            int x = pixels.get(i)[0];
+            int y = pixels.get(i)[1];
+            Color old = new Color(img.getRGB(x, y));
+
+            for (int j = 0; j <= deepth; j++){
+                img.setRGB(x, y+j, old.getRGB());
+            }
+
+        }
+
+        return img;
     }
 
 
@@ -89,4 +106,81 @@ public class Main extends Application {
     }
 
 
+    public static ArrayList<int[]> diagonala(BufferedImage img, double[] a, double[] b){
+        ArrayList<int[]> neki = new ArrayList<int[]>();
+
+        double[] xneki = {a[0], b[0]};
+        double[] yneki = {a[1], b[1]};
+        double xveliki = vecji(xneki);
+        double xmali = manjsi(xneki);
+        double yvelik = vecji(yneki);
+        double ymali = manjsi(yneki);
+
+        double k = (b[1] - a[1]) / (b[0] - a[0]);
+        //int n = a[1] / (k * a[0]);
+
+        double n = -(k*a[0]) + a[1];
+
+        for (int y = 0; y < img.getHeight(); y++) {
+            for (int x = 0; x < img.getWidth(); x++) {
+                int result = (int) Math.round(k*x+n);
+                if(y==result){
+                    if((x>=xmali)&&(x<=xveliki)&&(y>=ymali)&&(y<=yvelik)){
+                        int[] xiny = {x, y};
+                        neki.add(xiny);
+                    }
+                }else if(y+1==result){
+                    if((x>=xmali)&&(x<=xveliki)&&(y>=ymali)&&(y<=yvelik)){
+                        int[] xiny = {x, y};
+                        neki.add(xiny);
+                    }
+                }else if(y-1==result){
+                    if((x>=xmali)&&(x<=xveliki)&&(y>=ymali)&&(y<=yvelik)){
+                        int[] xiny = {x, y};
+                        neki.add(xiny);
+                    }
+                }
+            }
+        }
+        return neki;
+    }
+
+
+    public static double vecji(double[] neki){
+
+        double x;
+        if(neki[0]==neki[1]){
+            x = neki[0];
+        }else if(neki[1]<neki[0]){
+            x = neki[0];
+        }else {
+            x = neki[1];
+        }
+
+        return x;
+
+    }
+
+    public static double manjsi(double[] neki){
+
+        double x;
+        if(neki[0]==neki[1]){
+            x = neki[0];
+        }else if(neki[1]<neki[0]){
+            x = neki[1];
+        }else {
+            x = neki[0];
+        }
+
+        return x;
+
+    }
+
+
 }
+/*
+y = k * x + n
+-n + y = k*x
+-n = k*x-y
+n = -(k*x)+y
+*/
