@@ -1,11 +1,11 @@
 package sample;
 
+import com.jhlabs.image.CropFilter;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.effect.PerspectiveTransform;
 import javafx.stage.Stage;
 
 import javax.imageio.ImageIO;
@@ -33,16 +33,15 @@ public class Main extends Application {
         launch(args);
     }{
 
-        File img = new File("/Users/ziga/Desktop/old.png");
+        File img = new File("/Users/ziga/Desktop/old123.png");
         try {
             BufferedImage bimg = ImageIO.read(img);
             int w = bimg.getWidth(); //Set to the original width of the image
             int h = bimg.getHeight(); //Set to the original height of image
-
+            bimg = scaleImage(bimg, 1370, 2463);
             bimg = rotateCw(bimg);
             ParameterBlock params = new ParameterBlock();
             params.addSource(bimg); //source is the input image
-
             PerspectiveFilter filter = new PerspectiveFilter();
             BufferedImage bimg2 = filter.createCompatibleDestImage(bimg, ColorModel.getRGBdefault());
             //filter.setCorners(0, 0, w, 0, 100, h-100, w, h);
@@ -65,8 +64,12 @@ public class Main extends Application {
             ArrayList<int[]> neki = diagonala(bimg2, a, b);
             ArrayList<int[]> neki2 = diagonala(bimg2, a2, b2);
 
-            bimg2 = down(bimg2, neki, 13);
-            bimg2 = down(bimg2, neki2, 13);
+            bimg2 = down(bimg2, neki, 13, 0.9);
+            bimg2 = down(bimg2, neki2, 13, 0.7);
+
+            bimg2 = addShadow(bimg2);
+
+            bimg2 = crop(bimg2, 0, 0, 2000, 1200);
 
             File outputfile = new File("/Users/ziga/Desktop/new.png");
             ImageIO.write(bimg2, "png", outputfile);
@@ -83,13 +86,40 @@ public class Main extends Application {
 
     }
 
-    public static BufferedImage down(BufferedImage img, ArrayList<int[]> pixels, int deepth){
+    public BufferedImage addShadow(BufferedImage img){
+
+        try {
+            BufferedImage shadow = ImageIO.read(getClass().getClassLoader().getResourceAsStream("resources/shadow.png"));
+            int razlika = shadow.getWidth() - img.getWidth();
+
+
+
+            for(int x = 0; x < img.getWidth(); x++){
+                for(int y = 0; y < img.getHeight(); y++){
+                    if(!isTransparent(img, x, y)){
+                        Color current = new Color(img.getRGB(x, y));
+                        shadow.setRGB(x + razlika, y, current.getRGB());
+                    }
+                }
+            }
+
+            return shadow;
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return img;
+    }
+
+    public static BufferedImage down(BufferedImage img, ArrayList<int[]> pixels, int deepth, double koeficient){
 
         for(int i = 0; i < pixels.size(); i++){
             int x = pixels.get(i)[0];
             int y = pixels.get(i)[1];
             Color old = new Color(img.getRGB(x, y));
-            old = old.darker();
+            old = darker(old, koeficient);
 
             for (int j = 0; j <= deepth; j++){
                 img.setRGB(x, y+j, old.getRGB());
@@ -185,6 +215,49 @@ public class Main extends Application {
 
     }
 
+    public static Color darker(Color color, double koeficient){
+
+        double r = color.getRed();
+        double g = color.getGreen();
+        double b = color.getBlue();
+
+        r = r * koeficient;
+        g = g * koeficient;
+        b = b * koeficient;
+
+        int red = (int) Math.round(r);
+        int green = (int) Math.round(g);
+        int blue = (int) Math.round(b);
+
+        Color darker = new Color(red, green, blue);
+
+        return darker;
+    }
+
+    public static BufferedImage scaleImage(BufferedImage image, int width, int height) {
+        int type=0;
+        type = image.getType() == 0? BufferedImage.TYPE_INT_ARGB : image.getType();
+        BufferedImage resizedImage = new BufferedImage(width, height,type);
+        Graphics2D g = resizedImage.createGraphics();
+        g.drawImage(image, 0, 0, width, height, null);
+        g.dispose();
+        return resizedImage;
+    }
+
+    public boolean isTransparent(BufferedImage img, int x, int y ) {
+        int pixel = img.getRGB(x,y);
+        if( (pixel>>24) == 0x00 ) {
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    public static BufferedImage crop(BufferedImage image, int startX, int startY, int endX, int endY){
+
+        BufferedImage img = image.getSubimage(startX, startY, endX, endY);
+        return img;
+    }
 
 }
 /*
