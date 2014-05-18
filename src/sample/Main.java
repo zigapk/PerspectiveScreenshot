@@ -6,6 +6,9 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 import javax.imageio.ImageIO;
@@ -16,15 +19,82 @@ import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
 import java.util.ArrayList;
 
+import javafx.event.EventHandler;
 import com.jhlabs.image.PerspectiveFilter;
+
+import javafx.scene.Group;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 
 public class Main extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
-        primaryStage.setTitle("Hello World");
-        primaryStage.setScene(new Scene(root, 300, 275));
+    public void start(Stage primaryStage) {
+        Group root = new Group();
+        Text tx = new Text();
+        tx.setText("Drag and drop .png image here.");
+        tx.setTextAlignment(TextAlignment.CENTER);
+        tx.setY(100);
+        tx.setX(150);
+
+        Text tx2 = new Text();
+        tx2.setTextAlignment(TextAlignment.CENTER);
+        tx2.setY(120);
+        tx2.setX(220);
+        tx2.setText("720x1280");
+
+        Text tx3 = new Text();
+        tx3.setTextAlignment(TextAlignment.CENTER);
+        tx3.setY(140);
+        tx3.setX(155);
+        tx3.setText("Transformed image will be\ncreated in same path as\nthe source image is taken from.");
+
+        Text tx4 = new Text();
+        tx4.setTextAlignment(TextAlignment.CENTER);
+        tx4.setY(200);
+        tx4.setX(150);
+        tx4.setText("May crash, stop working etc.");
+
+
+        root.getChildren().add(tx);
+        root.getChildren().add(tx2);
+        root.getChildren().add(tx3);
+        root.getChildren().add(tx4);
+
+        Scene scene = new Scene(root, 551, 400);
+        scene.setOnDragOver(new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                Dragboard db = event.getDragboard();
+                if (db.hasFiles()) {
+                    event.acceptTransferModes(TransferMode.COPY);
+                } else {
+                    event.consume();
+                }
+            }
+        });
+
+        // Dropping over surface
+        scene.setOnDragDropped(new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                Dragboard db = event.getDragboard();
+                boolean success = false;
+                if (db.hasFiles()) {
+                    success = true;
+                    String filePath = null;
+                    for (File file:db.getFiles()) {
+                        filePath = file.getAbsolutePath();
+                        TransformImage(filePath);
+                    }
+                }
+                event.setDropCompleted(success);
+                event.consume();
+            }
+        });
+
+        primaryStage.setScene(scene);
         primaryStage.show();
     }
 
@@ -33,7 +103,7 @@ public class Main extends Application {
         launch(args);
     }{
 
-        File img = new File("/Users/ziga/Desktop/old123.png");
+        /*File img = new File("/Users/ziga/Desktop/old123.png");
         try {
             BufferedImage bimg = ImageIO.read(img);
             int w = bimg.getWidth(); //Set to the original width of the image
@@ -56,11 +126,7 @@ public class Main extends Application {
             double[] a2 = {848.0, 647.0};
             double[] b2 = {1363.0, 350.0};
 
-            /*double[] a = {0.0, 190.0};
-            double[] b = {848.0, 640.0};*/
 
-            /*int[] a = {1, 1};
-            int[] b = {100, 100};*/
             ArrayList<int[]> neki = diagonala(bimg2, a, b);
             ArrayList<int[]> neki2 = diagonala(bimg2, a2, b2);
 
@@ -81,18 +147,73 @@ public class Main extends Application {
         }catch (Exception e){
 
             String neki = e.toString();
-        }
+        }*/
 
 
     }
 
+    public void TransformImage(String path){
+
+        File img = new File(path);
+        try {
+            BufferedImage bimg = ImageIO.read(img);
+            int w = bimg.getWidth(); //Set to the original width of the image
+            int h = bimg.getHeight(); //Set to the original height of image
+
+            if(w==720&&h==1280){
+                bimg = scaleImage(bimg, 1370, 2463);
+                bimg = rotateCw(bimg);
+                ParameterBlock params = new ParameterBlock();
+                params.addSource(bimg); //source is the input image
+                PerspectiveFilter filter = new PerspectiveFilter();
+                BufferedImage bimg2 = filter.createCompatibleDestImage(bimg, ColorModel.getRGBdefault());
+                filter.setCorners(948, 747, 100, 297, 610, 100, 1463, 450);
+                filter.filter(bimg, bimg2);
+
+
+                double[] a = {0.0, 197.0};
+                double[] b = {848.0, 647.0};
+
+                double[] a2 = {848.0, 647.0};
+                double[] b2 = {1363.0, 350.0};
+
+
+                ArrayList<int[]> neki = diagonala(bimg2, a, b);
+                ArrayList<int[]> neki2 = diagonala(bimg2, a2, b2);
+
+                bimg2 = down(bimg2, neki, 13, 0.9);
+                bimg2 = down(bimg2, neki2, 13, 0.7);
+
+                bimg2 = addShadow(bimg2);
+
+                bimg2 = crop(bimg2, 0, 0, 2000, 1200);
+
+                path = newPath(path);
+                File outputfile = new File(path);
+                ImageIO.write(bimg2, "png", outputfile);
+            }
+
+
+        }catch (Exception e){
+
+            String neki = e.toString();
+        }
+
+
+
+    }
+
+    public static String newPath(String path){
+        int i = path.indexOf(".png");
+        String result = path.substring(0, i) + "-transformed" + ".png";
+
+        return result;
+    }
     public BufferedImage addShadow(BufferedImage img){
 
         try {
             BufferedImage shadow = ImageIO.read(getClass().getClassLoader().getResourceAsStream("resources/shadow.png"));
             int razlika = shadow.getWidth() - img.getWidth();
-
-
 
             for(int x = 0; x < img.getWidth(); x++){
                 for(int y = 0; y < img.getHeight(); y++){
