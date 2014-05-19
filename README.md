@@ -1,4 +1,4 @@
-A Java program that can take a Android screenshot and transform it like this:
+A Java program that can take an Android screenshot and transform it like this:
 
 <table>
 <td>
