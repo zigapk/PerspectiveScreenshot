@@ -1,12 +1,13 @@
 package sample;
 
-import com.jhlabs.image.CropFilter;
+import com.jhlabs.image.PerspectiveFilter;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
+import javafx.event.EventHandler;
+import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.layout.StackPane;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
@@ -18,14 +19,6 @@ import java.awt.image.ColorModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
 import java.util.ArrayList;
-
-import javafx.event.EventHandler;
-import com.jhlabs.image.PerspectiveFilter;
-
-import javafx.scene.Group;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
 
 public class Main extends Application {
 
