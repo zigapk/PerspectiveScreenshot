@@ -15,7 +15,7 @@ NOTE:
 - may not work
 - still has some bugs
 - works only on mac, linux. If you want to run it on windows, you will have to compile it yourself
-- <b>deprecated</>
+- <b>deprecated</b>
 
 
 By <a href="https://github.com/zigapk">Žiga Patačko Koderman</a>, free to use.
